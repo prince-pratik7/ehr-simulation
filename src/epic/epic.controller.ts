@@ -7,7 +7,7 @@ export class EpicController {
   constructor(private readonly epicService: EpicService) {}
 
   @Get('Patient')
-  // @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   async getPatientData(
     @Req() req,
     @Query('patientId') patientId: string,
@@ -16,7 +16,7 @@ export class EpicController {
   }
 
   @Get('Observation')
-  // @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   async fetchObservationsForPatient(
     @Req() req,
     @Query('patientId') patientId: string,

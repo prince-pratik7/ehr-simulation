@@ -21,7 +21,7 @@ export class EpicService {
       'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4';
     this.clientId = process.env.EPIC_CLIENT_ID;
     this.redirectUri = process.env.EPIC_REDIRECT_URI;
-    this.epicTokenEndPoint = process.env.EPIC_TokenEndPoint;
+    this.epicTokenEndPoint = process.env.EPIC_TOKEN_ENDPOINT;
 
     /** both keys are use to create JWT token for more details refer to epic documentation page
      * https://fhir.epic.com/Documentation?docId=oauth2&section=Creating-Key-Pair

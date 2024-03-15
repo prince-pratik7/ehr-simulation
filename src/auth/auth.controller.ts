@@ -2,8 +2,6 @@ import { Controller, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/user.interface';
-// import { UserService } from './user.service';
-// import { User } from './user.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -26,7 +24,7 @@ export class AuthController {
         secure: true,
         sameSite: 'none',
       });
-      res.status(200).json({ message: 'Login successful' });
+      res.status(200).json({ message: 'Login successful', token });
     } catch (error) {
       res.status(401).json({ message: 'Bad credentials' });
     }

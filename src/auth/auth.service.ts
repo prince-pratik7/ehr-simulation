@@ -22,7 +22,7 @@ export class AuthService {
       throw new Error('Invalid password');
     }
     const payload = { sub: foundUser.id, username: foundUser.username };
-    const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: '60s' });
+    const token = jwt.sign(payload, jwtConstants.secret, { expiresIn: '300s' });
     return token;
   }
 
