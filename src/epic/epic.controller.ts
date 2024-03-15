@@ -2,11 +2,11 @@ import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { EpicService } from './epic.service';
 import { AuthGuard } from '@nestjs/passport';
 
-@Controller('epic')
+@Controller('Epic')
 export class EpicController {
   constructor(private readonly epicService: EpicService) {}
 
-  @Get('patient')
+  @Get('Patient')
   // @UseGuards(AuthGuard('jwt'))
   async getPatientData(
     @Req() req,
@@ -15,9 +15,13 @@ export class EpicController {
     return this.epicService.getPatientData(patientId);
   }
 
-  @Get('lab')
+  @Get('Observation')
   // @UseGuards(AuthGuard('jwt'))
-  async getLabData(@Req() req, @Query('labId') labId: string): Promise<any> {
-    return this.epicService.getLabData(labId);
+  async fetchObservationsForPatient(
+    @Req() req,
+    @Query('patientId') patientId: string,
+    @Query('category') category: string,
+  ): Promise<any> {
+    return this.epicService.fetchObservationData(patientId, category);
   }
 }

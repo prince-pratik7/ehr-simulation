@@ -1,4 +1,3 @@
-// cerner.module.ts
 import { Module } from '@nestjs/common';
 import { CernerController } from './cerner.controller';
 import { CernerService } from './cerner.service';
