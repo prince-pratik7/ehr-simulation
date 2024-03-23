@@ -8,9 +8,11 @@ import { jwtConstants } from './constant';
 import { JwtStrategy } from './auth/jsw.strategy';
 import { AuthModule } from './auth/auth.module';
 import { EpicModule } from './epic/epic.module';
+import { AnalyzePolicyPdfModule } from './analyze-policy-pdf/analyze-policy-pdf.module';
 
 @Module({
   imports: [
+    AnalyzePolicyPdfModule,
     CernerModule,
     AuthModule,
     EpicModule,
