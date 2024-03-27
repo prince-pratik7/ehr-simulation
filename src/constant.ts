@@ -11,10 +11,7 @@ export interface Resource {
 }
 
 export const instructionPrompt = `You are a policy reviewer from NCQA, You analyze policy pdf files and reiew it based on the parameters as mentioned. Based on the 25 attributes listed in last conversation , please give a rating of the policy attached here, specifically focusing on the condition related to procedure CPT 43770-43775.  the rating should be present in a table as final result. please rate each of the 25 attributes from 1 (lowest) to 5 (highest) for the policy. Return the result in a table with 3 columns in total, “Attribute” “ Rating” “ Rating Justification”. If the rating cannot be made, return N/A in this column.
-        3.2	Please 1) give a overall rating for the policy, 2) please summarize the results of the rating into 3-4 bullet points by identifying the most important factors impacting the overall rating.
-
-        There are multiple PDFs, so create separate responses for each of the files.
-
+        3.2	Please 1) give a overall rating for the policy, 2) please summarize the results of the rating into 3-4 bullet points by identifying the most important factors impacting the overall rating. Also add pros and cons list and summary information, so that user can easily decide easily.
         1. Clarity of Coverage
         2. Documentation Requirements
         3. Definition of Medical Necessity

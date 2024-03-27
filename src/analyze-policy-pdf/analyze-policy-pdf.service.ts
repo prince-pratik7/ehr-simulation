@@ -1,17 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-// import OpenAI from 'openai';
-import OpenAI, { ClientOptions } from 'openai';
-import * as FormData from 'form-data';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import OpenAI from 'openai';
 import * as fs from 'fs';
 import { instructionPrompt } from 'src/constant';
-// import openai from 'openai';
+import { UploadedFile } from './file.interface';
+// import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+
+// import { InjectRepository } from '@nestjs/typeorm';
+// import { Repository } from 'typeorm';
+import * as AWS from 'aws-sdk';
+// import { AnalyzeResponse } from './entities/analyze-response.entity'; // Assuming you have an entity for responses
 
 @Injectable()
 export class AnalyzePolicyPdfService {
   private readonly CHATGPT_API_ENDPOINT =
     'https://api.openai.com/v1/engines/davinci/completions';
-  private readonly pdfFiles = ['pdf1.pdf', 'pdf2.pdf', 'pdf3.pdf']; // Add more PDF filenames
   private openai: OpenAI;
 
   async analyzePolicyPDFs(): Promise<any[]> {
@@ -87,6 +91,129 @@ export class AnalyzePolicyPdfService {
 
     console.log(run);
     return [run];
+  }
+
+  // async analyzePolicyMultiplePDFs(files: Express.Multer.File[]): Promise<void> {
+  //   const openaiApiKey = process.env.OPENAI_API_KEY;
+  //   const openai = new OpenAI();
+
+  //   for (const file of files) {
+  //     const fileData = fs.readFileSync(file.path);
+  //     const uploadedFile = await openai.files.create({
+  //       file: fileData,
+  //       purpose: 'assistants',
+  //     });
+
+  //     const thread = await openai.beta.threads.create({
+  //       messages: [
+  //         {
+  //           role: 'user',
+  //           content: instructionPrompt,
+  //           file_ids: [uploadedFile.id],
+  //         },
+  //       ],
+  //     });
+
+  //     const run = await openai.beta.threads.runs.create(thread.id, {
+  //       assistant_id: process.env.OPENAI_ASSISTANT_ID,
+  //     });
+
+  //     console.log('####Run', run);
+
+  //     // await this.saveResponse(run);
+  //     // await this.pushToSQS(run);
+  //   }
+
+  //   // Clean up uploaded files (if necessary)
+  //   // for (const file of files) {
+  //   //   fs.unlinkSync(file.path);
+  //   // }
+  // }
+
+  async analyzePolicyMultiplePDFs(files: UploadedFile[]): Promise<void> {
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const openai = new OpenAI();
+
+    // Create an assistant. Not required anymore.
+    // const myAssistant = await openai.beta.assistants.create({
+    //   instructions: instructionPrompt,
+    //   name: 'Policy Reviewer',
+    //   // tools: [{ type: 'code_interpreter' }],
+    //   tools: [{ type: 'retrieval' }],
+    //   model: 'gpt-4-turbo-preview',
+    //   // model: 'gpt-3.5-turbo',
+    // });
+
+    // console.log(myAssistant);
+
+    for (const file of files) {
+      // const fileStream = fs.createReadStream(file.buffer);
+
+      // Validate file type
+      if (path.extname(file.originalname).toLowerCase() !== '.pdf') {
+        throw new BadRequestException('Only PDF files are allowed.');
+      }
+
+      // Create a temporary file path
+      const tempFilePath = path.join(os.tmpdir(), file.originalname);
+
+      // Write the buffer to the temporary file
+      fs.writeFileSync(tempFilePath, file.buffer);
+
+      // Create a read stream from the temporary file
+      const fileStream = fs.createReadStream(tempFilePath);
+
+      const uploadedFile = await openai.files.create({
+        file: fileStream,
+        purpose: 'assistants',
+      });
+
+      const thread = await openai.beta.threads.create({
+        messages: [
+          {
+            role: 'user',
+            content: instructionPrompt,
+            file_ids: [uploadedFile.id],
+          },
+        ],
+      });
+
+      const run = await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: process.env.OPENAI_ASSISTANT_ID,
+      });
+
+      // Add logic here to save the response to the database or push it to SQS
+      // await this.saveResponse(run);
+      // await this.pushToSQS(run);
+
+      // For now, I'm just logging the response
+      console.log('Response:', run);
+    }
+
+    // Clean up uploaded files (if necessary)
+    // for (const file of files) {
+    //   fs.unlinkSync(file.path);
+    // }
+  }
+
+  // async saveResponse(response: any): Promise<void> {
+  //   const analyzeResponse = new AnalyzeResponse();
+  //   analyzeResponse.response = response;
+  //   await this.analyzeResponseRepository.save(analyzeResponse);
+  // }
+
+  async pushToSQS(response: any): Promise<void> {
+    const sqs = new AWS.SQS({
+      region: process.env.AWS_REGION || 'your-region',
+    });
+    const queueUrl = process.env.SQS_QUEUE_URL || 'your-sqs-queue-url';
+
+    const params = {
+      MessageBody: JSON.stringify(response),
+      QueueUrl: queueUrl,
+    };
+
+    await sqs.sendMessage(params).promise();
   }
 
   async fetchRunId(runId: string, threadId: string): Promise<any[]> {
