@@ -7,7 +7,7 @@ import { SqsConsumerService } from './sqs-consumer.service';
 export class SqsMessageConsumerCronJob {
   constructor(private readonly sqsService: SqsConsumerService) {}
 
-  @Cron(process.env.CRON_EXPRESSION)
+  @Cron(process.env.CRON_EXPRESSION || '')
   async handleCron() {
     try {
       console.log('Starting SQS message consumption...');

@@ -10,11 +10,15 @@ import {
 import { AnalyzePolicyPdfService } from './analyze-policy-pdf.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadedFile } from './file.interface';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { SqsMessageConsumerCronJob } from './cron.jobs';
 
-@Controller('analyze-policy-pdfs')
+@ApiTags('Analyze Policies')
+@Controller({ path: 'analyze-policy-pdfs', version: '1' })
 export class AnalyzePolicyPdfController {
   constructor(
     private readonly analyzePolicyPdfService: AnalyzePolicyPdfService,
+    private readonly sqsMessageConsumerCronJob: SqsMessageConsumerCronJob,
   ) {}
 
   @Get()
@@ -31,6 +35,17 @@ export class AnalyzePolicyPdfController {
   // }
 
   @Post('multiple-pdfs')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @UseInterceptors(FilesInterceptor('files'))
   async analyzePolicyMultiplePDFs(
     @UploadedFiles() files: UploadedFile[],
@@ -47,5 +62,10 @@ export class AnalyzePolicyPdfController {
     @Query('threadId') threadId: string,
   ): Promise<any[]> {
     return this.analyzePolicyPdfService.fetchRunId(runId, threadId);
+  }
+
+  @Get('start-cron-job')
+  async startCronJob(): Promise<void> {
+    return this.sqsMessageConsumerCronJob.handleCron();
   }
 }

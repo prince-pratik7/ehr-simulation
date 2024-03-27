@@ -17,7 +17,7 @@ export class SqsConsumerService {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     });
     this.processedRequests = [];
-    this.queueUrl = process.env.SQS_QUEUE_URL;
+    this.queueUrl = process.env.SQS_QUEUE_URL!;
   }
 
   async consumeSqsMessages() {
@@ -33,19 +33,24 @@ export class SqsConsumerService {
 
       if (data.Messages && data.Messages.length > 0) {
         for (const message of data.Messages) {
-          const messageBody = JSON.parse(message.Body);
+          const messageBody = JSON.parse(message.Body!);
 
-          const runId = messageBody.runId;
-          const threadId = messageBody.threadId;
+          const runId = messageBody.id;
+          const threadId = messageBody.thread_id;
+          console.log('messagebody', messageBody);
+          console.log('runid', runId);
+          console.log('thread_id', threadId);
 
           try {
             const response = await this.analyzePolicyPdfService.fetchRunId(
               runId,
               threadId,
             );
+            console.log('sqs response', response);
             console.log(
               `Request fetched successfully - Thread ID: ${threadId}, Run ID: ${runId}`,
             );
+
             this.processedRequests.push(response);
           } catch (error) {
             console.error(
@@ -54,10 +59,12 @@ export class SqsConsumerService {
           }
 
           // Delete the message from the queue after processing
-          await this.deleteMessageFromQueue(
-            this.queueUrl,
-            message.ReceiptHandle,
-          );
+          if (messageBody.status == 'in_progress') {
+            await this.deleteMessageFromQueue(
+              this.queueUrl,
+              message.ReceiptHandle!,
+            );
+          }
         }
       }
     } catch (error) {

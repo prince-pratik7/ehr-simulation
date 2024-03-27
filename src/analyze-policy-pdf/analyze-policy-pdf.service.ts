@@ -86,7 +86,7 @@ export class AnalyzePolicyPdfService {
     console.log(thread);
 
     const run = await openai.beta.threads.runs.create(thread.id, {
-      assistant_id: process.env.OPENAI_ASSISTANT_ID,
+      assistant_id: process.env.OPENAI_ASSISTANT_ID || '',
     });
 
     console.log(run);
@@ -179,12 +179,12 @@ export class AnalyzePolicyPdfService {
       });
 
       const run = await openai.beta.threads.runs.create(thread.id, {
-        assistant_id: process.env.OPENAI_ASSISTANT_ID,
+        assistant_id: process.env.OPENAI_ASSISTANT_ID!,
       });
 
       // Add logic here to save the response to the database or push it to SQS
       // await this.saveResponse(run);
-      // await this.pushToSQS(run);
+      await this.pushToSQS(run);
 
       // For now, I'm just logging the response
       console.log('Response:', run);
@@ -203,6 +203,7 @@ export class AnalyzePolicyPdfService {
   // }
 
   async pushToSQS(response: any): Promise<void> {
+    console.log('pushtosqs start');
     const sqs = new AWS.SQS({
       region: process.env.AWS_REGION || 'your-region',
     });
@@ -213,7 +214,8 @@ export class AnalyzePolicyPdfService {
       QueueUrl: queueUrl,
     };
 
-    await sqs.sendMessage(params).promise();
+    const awsresponse = await sqs.sendMessage(params).promise();
+    console.log('pushtosqs end', awsresponse);
   }
 
   async fetchRunId(runId: string, threadId: string): Promise<any[]> {
